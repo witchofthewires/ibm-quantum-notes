@@ -41,8 +41,8 @@ def generate_bell_psi_minus():
     qsys.cx(0,1)
     return qsys
 
-def transpile(circuit, backend):
-    pm = qiskit.transpiler.generate_preset_pass_manager(backend=backend, optimization_level=1)
+def transpile(circuit, backend, optimization_level=1):
+    pm = qiskit.transpiler.generate_preset_pass_manager(backend=backend, optimization_level=optimization_level)
     isa_circuit = pm.run(circuit)
     print("Circuit optimized")
     return isa_circuit
