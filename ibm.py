@@ -41,6 +41,21 @@ def generate_bell_psi_minus():
     qsys.cx(0,1)
     return qsys
 
+def transpile(circuit, backend):
+    pm = qiskit.transpiler.generate_preset_pass_manager(backend=backend, optimization_level=1)
+    isa_circuit = pm.run(circuit)
+    print("Circuit optimized")
+    return isa_circuit
+
+def run_transpiled_circuit_and_get_counts(isa_circuit, backend, shots=1000):
+    sampler = qiskit_ibm_runtime.Sampler(mode=backend)
+    job = sampler.run([isa_circuit], shots=shots)
+    print(f"job registered")
+    result = job.result()
+    print(f"job results obtained: {result}") 
+    
+    return result[0].data.meas.get_counts()
+
 def run_circuit_and_get_counts(circuit, backend, shots=1000):
     """
     Runs a quantum circuit on a specified backend and returns the measurement counts.
@@ -53,11 +68,8 @@ def run_circuit_and_get_counts(circuit, backend, shots=1000):
     Returns:
         dict: A dictionary of measurement counts.
     """
-    print("hiya")
-    pm = qiskit.transpiler.generate_preset_pass_manager(backend=backend, optimization_level=1)
-    print("let's get started")
-    isa_circuit = pm.run(circuit)
-    print("first here")
+    isa_circuit = transpile(circuit, backend)
+    isa_circuit.draw("mpl")
     sampler = qiskit_ibm_runtime.Sampler(mode=backend)
     print("and now here")
     job = sampler.run([isa_circuit], shots=shots)
@@ -75,7 +87,7 @@ def register_backend(secrets_file):
         cfg = yaml.load(f, Loader=yaml.FullLoader)
         token = cfg['token']
         
-    qiskit_ibm_runtime.QiskitRuntimeService.save_account(channel='ibm_quantum_platform', token=token, overwrite=True, set_as_default=True)
+    qiskit_ibm_runtime.QiskitRuntimeService.save_account(channel='ibm_quantum_platform', token=token, overwrite=True, set_as_default=True, instance='auto')
     service = qiskit_ibm_runtime.QiskitRuntimeService(channel='ibm_quantum_platform')
 
     # load saved credentials
